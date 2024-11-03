@@ -9,7 +9,7 @@ Sorting: The tasks can be sorted by due date, allowing users to prioritize based
 File Management: The program reads tasks from a file (tasks.txt) and saves any updates to the file, making the task list persistent between sessions.
 OOP Design: The program uses classes for better code management and scalability, demonstrating a solid understanding of encapsulation and abstraction.
 Purpose:
-The Task Manager is ideal for showcasing your C++ skills, especially in:
+The Task Manager is ideal for showcasing my C++ skills, especially in:
 
 # Object-oriented programming
 File handling (reading from and writing to files)
