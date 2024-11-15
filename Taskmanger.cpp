@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <cctype>
 
 class Task {
 private:
@@ -38,15 +39,21 @@ private:
     std::vector<Task> tasks;
     std::string filename;
 
+    static bool equalsIgnoreCase(const std::string &str1, const std::string &str2) {
+        if (str1.size() != str2.size()) return false;
+        for (size_t i = 0; i < str1.size(); ++i) {
+            if (tolower(str1[i]) != tolower(str2[i])) return false;
+        }
+        return true;
+    }
+
 public:
     TaskManager(const std::string &filename) : filename(filename) {}
 
-    // Add a new task
     void addTask(const Task &task) {
         tasks.push_back(task);
     }
 
-    // Load tasks from file
     void loadTasks() {
         std::ifstream file(filename);
         if (!file) {
@@ -55,17 +62,20 @@ public:
         }
 
         std::string title, description, dueDate;
-        bool completed;
+        std::string completedStr;
         while (file >> std::ws && getline(file, title)) {
-            getline(file, description);
-            file >> dueDate >> completed;
+            if (!getline(file, description) || !(file >> dueDate >> completedStr)) {
+                std::cerr << "Error reading task data. Skipping this entry." << std::endl;
+                file.clear();  // Clear error flags
+                file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Skip to the next entry
+                continue;
+            }
+            bool completed = (completedStr == "1");
             tasks.emplace_back(title, description, dueDate, completed);
         }
-
         file.close();
     }
 
-    // Save tasks to file
     void saveTasks() const {
         std::ofstream file(filename);
         if (!file) {
@@ -74,25 +84,30 @@ public:
         }
 
         for (const auto &task : tasks) {
-            file << task.getTitle() << "\n" << task.getDescription() << "\n" 
-                 << task.getDueDate() << "\n" << task.isCompleted() << std::endl;
+            file << task.getTitle() << "\n"
+                 << task.getDescription() << "\n"
+                 << task.getDueDate() << "\n"
+                 << task.isCompleted() << std::endl;
         }
 
         file.close();
     }
 
-    // Display all tasks
     void displayTasks() const {
+        if (tasks.empty()) {
+            std::cout << "No tasks available." << std::endl;
+            return;
+        }
+
         for (const auto &task : tasks) {
             task.displayTask();
             std::cout << "------------------" << std::endl;
         }
     }
 
-    // Mark a task as completed by title
     void completeTask(const std::string &taskTitle) {
         for (auto &task : tasks) {
-            if (task.getTitle() == taskTitle) {
+            if (equalsIgnoreCase(task.getTitle(), taskTitle)) {
                 task.markAsCompleted();
                 std::cout << "Task marked as completed." << std::endl;
                 return;
@@ -101,7 +116,6 @@ public:
         std::cerr << "Task not found!" << std::endl;
     }
 
-    // Sort tasks by due date
     void sortTasksByDate() {
         std::sort(tasks.begin(), tasks.end(), Task::compareByDate);
     }
@@ -113,7 +127,7 @@ int main() {
     // Load tasks from file
     manager.loadTasks();
 
-    // Add a new task
+    // Add new tasks
     manager.addTask(Task("Finish Project", "Complete the coding assignment", "2024-11-01"));
     manager.addTask(Task("Job Application", "Apply to tech companies", "2024-10-25"));
 
